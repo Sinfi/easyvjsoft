@@ -1,0 +1,83 @@
+<!--
+
+  簡易VJソフト Ver1.2
+
+  Copyright (c) 2026 Foo Mashiro
+  
+  Released under the MIT License.
+  https://opensource.org/licenses/mit-license.php
+
+ 【改訂履歴】
+  [2025-10-09: v0.1.1] HTML5に対応
+  [2026-02-01: v0.2.0] スペースキー＆2秒自動フェードを実装
+
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>簡易VJソフト メイン画面</title>
+  <style>
+    html,body { background: #222; margin:0; height:100%; }
+    #container { position:relative; width:98vw; height:96vh; margin:2vh auto; }
+    video {
+      position:absolute; width:100%; height:100%; top:0; left:0;
+      background:#111; object-fit:cover;
+      border-radius: 12px;
+      transition: opacity 0.2s;
+    }
+  </style>
+</head>
+<body>
+<div id="container">
+  <video id="videoA"></video>
+  <video id="videoB"></video>
+</div>
+<script>
+let videoA = document.getElementById('videoA');
+let videoB = document.getElementById('videoB');
+videoA.style.opacity = 1;
+videoB.style.opacity = 0;
+let urlCacheA=null, urlCacheB=null;
+
+function ensureLoop(video){
+  video.loop = true;
+  video.onended = null;
+  setInterval(()=>{ if(video.src && video.paused) video.play(); }, 2000);
+}
+ensureLoop(videoA);
+ensureLoop(videoB);
+
+function setBlend(val){
+  val = Math.max(0, Math.min(1, val));
+  videoA.style.opacity = 1-val;
+  videoB.style.opacity = val;
+  videoA.volume = 1-val;
+  videoB.volume = val;
+}
+
+window.addEventListener('message', event => {
+  let { type, buffer, mime, value, time } = event.data || {};
+  if ((type === 'loadA' || type === 'loadB') && buffer) {
+    let blob = new Blob([buffer], {type: mime});
+    let url = URL.createObjectURL(blob);
+    if(type === 'loadA'){
+      if(urlCacheA) URL.revokeObjectURL(urlCacheA);
+      urlCacheA = url; videoA.src = url; videoA.play();
+    } else {
+      if(urlCacheB) URL.revokeObjectURL(urlCacheB);
+      urlCacheB = url; videoB.src = url; videoB.play();
+    }
+    return;
+  }
+  if (type === 'fade') setBlend(value);
+  if(type==='playA') videoA.play();
+  if(type==='pauseA') videoA.pause();
+  if(type==='seekA' && typeof time === "number") videoA.currentTime = time;
+  if(type==='playB') videoB.play();
+  if(type==='pauseB') videoB.pause();
+  if(type==='seekB' && typeof time === "number") videoB.currentTime = time;
+});
+</script>
+</body>
+</html>

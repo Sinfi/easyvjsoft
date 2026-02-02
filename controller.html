@@ -1,0 +1,261 @@
+<!--
+
+  簡易VJソフト Ver1.2
+
+  Copyright (c) 2026 Foo Mashiro
+  
+  Released under the MIT License.
+  https://opensource.org/licenses/mit-license.php
+
+ 【改訂履歴】
+  [2025-10-09: v0.1.1] HTML5に対応
+  [2026-02-01: v0.2.0] スペースキー＆2秒自動フェードを実装
+
+
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>簡易VJソフト コントローラー画面</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body {
+      background: #2e2e2e; color: #e0e0e0;
+      font-family: 'Segoe UI', 'Arial', sans-serif; margin:0; padding: 0 0 22px 0; min-height:100vh;
+    }
+    h2 {
+      font-size: 2.1rem; font-weight: bold; color: #e0e0e0;
+      text-align: center; letter-spacing:0.05em; margin: 28px 0 7px 0;
+    }
+    #openWinLabel {
+      text-align: center; margin-top: 2px;
+    }
+    #openWin {
+      padding: 5px 17px; border-radius: 5px; background: #444; color:#eee;
+      border:none; font-size: 1rem; margin: 0 auto; display: inline-block; letter-spacing: 0.04em; cursor: pointer;
+    }
+    #openWin:hover { background:#666; }
+    .dropzone-row {
+      display: flex; justify-content: center; gap: 22px; margin: 25px auto 20px auto; max-width: 1200px;
+    }
+    .dropzone-col {
+      flex:1; min-width:210px; max-width:600px; cursor:pointer;
+      background: #383838; color: #bdbdbd;
+      font-weight: bold; border-radius: 8px; border: 2.3px dashed #888;
+      display: flex; flex-direction: column; align-items: center; padding:32px 10px 24px 10px; font-size:1.05em;
+      text-align:center; outline:none; box-sizing:border-box; user-select:none;
+      transition: background 0.2s, border-color 0.2s; margin-bottom: 8px;
+    }
+    .dropzone-col.focus { border-color: #fff; background: #464646; color:#fff;}
+    .dropzone-label { font-size:1em;letter-spacing:0.02em; }
+    .preview-row {
+      display: flex; flex-wrap: nowrap; justify-content: center; align-items: flex-end;
+      max-width:1400px; margin:0 auto 14px auto; gap:22px;
+    }
+    .preview-block { flex:1; min-width:220px; display:flex;flex-direction:column;align-items:center; }
+    .preview-block label { margin-bottom: 7px; font-weight: normal;}
+    .video-preview {
+      width:420px; max-width:44vw; height:237px; background:#111;
+      margin-bottom:7px; border-radius:10px; border: 1.5px solid #666;
+      outline:none; box-shadow:0 2px 8px #0007;
+      display:block;
+    }
+    .file-label {
+      font-size:0.98em; color:#bbb; margin-top:5px; min-height:1.4em;max-width:410px;
+      overflow:hidden;white-space:nowrap;text-overflow:ellipsis; text-align:center;
+      word-break:break-all;
+    }
+    @media (max-width:1100px) {
+      .video-preview {width:93vw;max-width:99vw;height:21vw;min-height:70px;}
+      .preview-row,.dropzone-row {flex-direction:column;align-items:center;}
+      .dropzone-col{max-width:97vw;}
+    }
+    #slider { width:260px; accent-color: #888; margin: 14px 11px 10px 11px; border-radius:6px; height:11px;}
+    #percent { font-size: 1.02rem; background:#333a; border-radius:4px; padding:2px 7px;}
+    .label-wrap{ display:flex; justify-content:center; align-items:end; gap:11px; margin-bottom:8px;}
+    #fadeBtn {
+      margin-left: 18px;
+      font-size: 1rem;
+      padding: 4px 18px;
+      border-radius:6px;
+      border: 1.2px solid #666;
+      background: #333;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #fadeBtn:hover { background: #505050; }
+    #bikou-area {
+      background: #252525; color:#ccc; border:1.5px solid #666; border-radius:8px;
+      max-width: 780px; margin: 38px auto 12px auto; padding: 13px 20px 13px 20px;
+      font-size: 1.11em; line-height:1.7; letter-spacing:0.03em; box-shadow:0 2px 6px #0004;
+      min-height:60px;
+    }
+    #bikou-area h3 { color:#bbb; margin-bottom:5px; font-size:1.15em;}
+    #bikou-area p {margin: 7px 0;}
+  </style>
+</head>
+<body>
+<h2>簡易VJソフト</h2>
+<div id="openWinLabel">
+  <button id="openWin">スクリーンを開く</button>
+</div>
+<div class="dropzone-row">
+  <div class="dropzone-col" id="dropzoneA" tabindex="0">
+    <div class="dropzone-label">動画A用ファイル<br>ここにドラッグ＆ドロップ</div>
+  </div>
+  <div class="dropzone-col" id="dropzoneB" tabindex="0">
+    <div class="dropzone-label">動画B用ファイル<br>ここにドラッグ＆ドロップ</div>
+  </div>
+</div>
+<div class="preview-row">
+  <div class="preview-block">
+    <label>動画A: <input type="file" id="fileA" accept="video/*"></label>
+    <video id="previewA" class="video-preview" controls muted loop></video>
+    <div id="labelA" class="file-label"></div>
+  </div>
+  <div class="preview-block">
+    <label>動画B: <input type="file" id="fileB" accept="video/*"></label>
+    <video id="previewB" class="video-preview" controls muted loop></video>
+    <div id="labelB" class="file-label"></div>
+  </div>
+</div>
+<div class="label-wrap">
+  <span>クロスフェード：</span>
+  <input type="range" id="slider" min="0" max="100" value="0">
+  <span id="percent">A:100 / B:0</span>
+  <button id="fadeBtn" title="フェード">2秒自動フェード</button>
+</div>
+<div id="bikou-area">
+  <h3>【使い方】</h3>
+  <p>・上部にある【スクリーンを開く】を押し、見せたい画面上で「F11」キーで最大化<br>
+  ・左側「動画A用」枠へ、右側「動画B用」枠へ動画ファイルをドラッグ＆ドロップまたは「選択」してください。<br>
+  ・「2秒自動フェード」ボタンやスペースキーを押すとA/Bの映像・音声がなめらかに切り替わります。</p>
+</div>
+<script>
+let mainWin = null, latestFileA = null, latestFileB = null;
+const labelA = document.getElementById("labelA");
+const labelB = document.getElementById("labelB");
+document.getElementById("openWin").onclick = ()=>{
+    if(!mainWin || mainWin.closed){
+        mainWin = window.open('main.html', '_blank');
+        setTimeout(()=>{
+          if(latestFileA) sendFileToMain('loadA', latestFileA);
+          if(latestFileB) sendFileToMain('loadB', latestFileB);
+        }, 800);
+    } else mainWin.focus();
+};
+function sendFileToMain(type, file) {
+  let reader = new FileReader();
+  reader.onload = function(e) {
+    mainWin?.postMessage({type, buffer: e.target.result, mime: file.type }, '*');
+  };
+  reader.readAsArrayBuffer(file);
+}
+const previewA = document.getElementById("previewA");
+const previewB = document.getElementById("previewB");
+document.getElementById("fileA").addEventListener("change", e => {
+  let file = e.target.files[0];
+  if (file) {
+    latestFileA = file;
+    previewA.src = URL.createObjectURL(file); previewA.play();
+    sendFileToMain('loadA', file);
+    labelA.textContent = file.name;
+  }
+});
+document.getElementById("fileB").addEventListener("change", e => {
+  let file = e.target.files[0];
+  if (file) {
+    latestFileB = file;
+    previewB.src = URL.createObjectURL(file); previewB.play();
+    sendFileToMain('loadB', file);
+    labelB.textContent = file.name;
+  }
+});
+document.getElementById("slider").addEventListener("input", function() {
+  let v = this.value/100;
+  document.getElementById("percent").textContent = `A:${Math.round((1-v)*100)} / B:${Math.round(v*100)}`;
+  mainWin?.postMessage({type:'fade', value:v}, '*');
+});
+// ドラッグ&ドロップ A/B
+["A","B"].forEach(name=>{
+  const dz = document.getElementById("dropzone"+name);
+  dz.addEventListener('dragover',e=>{e.preventDefault(); dz.classList.add('focus');});
+  dz.addEventListener('dragleave',e=>{e.preventDefault(); dz.classList.remove('focus');});
+  dz.addEventListener('blur', ()=>dz.classList.remove('focus'));
+  dz.addEventListener('drop',e=>{
+    e.preventDefault(); dz.classList.remove('focus');
+    if(e.dataTransfer.files.length){
+      const file = e.dataTransfer.files[0];
+      if(name==="A"){
+        latestFileA = file;
+        previewA.src = URL.createObjectURL(file); previewA.play();
+        sendFileToMain('loadA', file);
+        labelA.textContent = file.name;
+      }else{
+        latestFileB = file;
+        previewB.src = URL.createObjectURL(file); previewB.play();
+        sendFileToMain('loadB', file);
+        labelB.textContent = file.name;
+      }
+    }
+  });
+});
+// 再生位置・再生/一時停止 完全同期
+let syncPreviewA=false, syncPreviewB=false;
+setInterval(()=>{
+    if(syncPreviewA && mainWin)
+        mainWin.postMessage({type:'seekA', time: previewA.currentTime}, '*');
+    if(syncPreviewB && mainWin)
+        mainWin.postMessage({type:'seekB', time: previewB.currentTime}, '*');
+}, 120);
+previewA.addEventListener("play", ()=> { syncPreviewA=true; mainWin?.postMessage({type:'playA'},'*'); });
+previewA.addEventListener("pause", ()=> { syncPreviewA=false; mainWin?.postMessage({type:'pauseA'},'*'); });
+previewA.addEventListener("seeked", ()=> { mainWin?.postMessage({type:'seekA', time: previewA.currentTime},'*'); });
+previewB.addEventListener("play", ()=> { syncPreviewB=true; mainWin?.postMessage({type:'playB'},'*'); });
+previewB.addEventListener("pause", ()=> { syncPreviewB=false; mainWin?.postMessage({type:'pauseB'},'*'); });
+previewB.addEventListener("seeked", ()=> { mainWin?.postMessage({type:'seekB', time: previewB.currentTime},'*'); });
+
+// --- 自動フェード機能（フェード中キャンセル対応） ---
+let fadeInterval = null;
+function autoFade(){
+  const slider = document.getElementById("slider");
+  // すでにフェード中なら中断
+  if(fadeInterval){
+    clearInterval(fadeInterval);
+    fadeInterval = null;
+    return;
+  }
+  let now = slider.value/100;
+  let toB = now < 0.5;
+  let start = now;
+  let end = toB ? 1 : 0;
+  let duration = 2000; // 2秒
+  let steps = 40;
+  let stepTime = duration/steps;
+  let step = 0;
+  fadeInterval = setInterval(()=>{
+    step++;
+    let t = step/steps;
+    let val = start + (end-start)*t;
+    slider.value = Math.round(val*100);
+    document.getElementById("percent").textContent = `A:${Math.round((1-val)*100)} / B:${Math.round(val*100)}`;
+    mainWin?.postMessage({type:'fade', value:val}, '*');
+    if(step>=steps){
+      clearInterval(fadeInterval);
+      fadeInterval = null;
+    }
+  }, stepTime);
+}
+document.getElementById("fadeBtn").onclick = autoFade;
+window.addEventListener("keydown",e=>{
+  if(document.activeElement.tagName==="INPUT"||document.activeElement.tagName==="TEXTAREA") return;
+  if(e.code==="Space"){
+    e.preventDefault();
+    autoFade();
+  }
+});
+</script>
+</body>
+</html>
