@@ -33,6 +33,12 @@ https://opensource.org/licenses/mit-license.php
 
 ■作者
 風ましろ
+Booth: https://djfooo.booth.pm/
+Twitter: https://x.com/fooomashiro
+Github: https://github.com/Sinfi
+
+■ソースコード
+https://github.com/Sinfi/easyvjsoft
 
 ■アップデート履歴
 [2025-10-09: v0.1.1] HTML5に対応
